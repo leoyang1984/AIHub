@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern HTML App with Code Preview</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
+    <style>
+        :root {
+            --main-bg-color: #f0f0f0;
+            --container-bg-start: #e0e0e0;
+            --container-bg-end: #f8f8f8;
+            --input-bg-color: rgba(255, 255, 255, 0.7);
+            --border-color: #ccc;
+            --button-bg-color: #444;
+            --button-hover-bg-color: #555;
+            --button-active-bg-color: #333;
+            --button-text-color: #fff;
+            --text-color: #333;
+            --placeholder-color: #888;
+            --border-radius: 8px;
+            --spacing: 15px;
+            --font-family: 'Arial', sans-serif;
+            --font-size: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: var(--font-family);
+            background-color: var(--main-bg-color);
+        }
+
+        .left-container,
+        .right-container {
+            width: 50%;
+            height: 100%;
+            margin: 10px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            border: none;
+        }
+
+        .CodeMirror {
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            height: calc(100vh - 140px);
+            overflow: auto;
+        }
+
+        #editorContainer {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            height: 100%;
+            position: relative;
+        }
+
+        #toolbar {
+            display: flex;
+            background-color: white;
+            padding: 10px;
+            border-top: 1px solid transparent;
+            background: linear-gradient(to right, white 0%, white 10%, lightgray 50%, white 90%, white 100%);
+        }
+
+        #toolbar button {
+            flex: 1;
+            margin: 0 5px;
+            padding: 10px;
+            background-color: var(--button-bg-color);
+            color: var(--button-text-color);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #toolbar button:hover {
+            background-color: var(--button-hover-bg-color);
+        }
+
+        #toolbar button:active {
+            background-color: var(--button-active-bg-color);
+            color: var(--button-text-color);
+        }
+
+        #websiteSwitcher {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #websiteSwitcher button {
+            flex: 1;
+            margin: 0 5px;
+            padding: 10px;
+            background-color: var(--button-bg-color);
+            color: var(--button-text-color);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #websiteSwitcher button:hover {
+            background-color: var(--button-hover-bg-color);
+        }
+
+        #websiteSwitcher button:active {
+            background-color: var(--button-active-bg-color);
+            color: var(--button-text-color);
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            gap: var(--spacing);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .container {
+            background: linear-gradient(to bottom, var(--container-bg-start), var(--container-bg-end));
+            border-radius: var(--border-radius);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: var(--spacing);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .input-box,
+        .preview-box,
+        .button {
+            background-color: var(--input-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: var(--spacing);
+            margin-bottom: var(--spacing);
+        }
+
+        .preview-box {
+            min-height: 100px;
+            overflow-y: auto;
+        }
+
+        .button {
+            display: block;
+            width: 100%;
+            color: var(--button-text-color);
+            font-size: var(--font-size);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            background-color: var(--button-bg-color);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            border-radius: var(--border-radius);
+        }
+
+        .button:hover {
+            background-color: var(--button-hover-bg-color);
+        }
+
+        .button:active {
+            background-color: var(--button-active-bg-color);
+            transform: translateY(2px);
+        }
+
+        .button::after {
+            content: attr(data-feedback);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--button-bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .button.feedback::after {
+            opacity: 1;
+        }
+
+        textarea,
+        input[type="text"] {
+            width: 100%;
+            border: none;
+            background-color: transparent;
+            resize: vertical;
+            min-height: 50px;
+            font-size: var(--font-size);
+            color: var(--text-color);
+        }
+
+        .placeholder-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing);
+            margin-bottom: var(--spacing);
+        }
+
+        .placeholder-input {
+            flex: 1 1 calc(50% - var(--spacing));
+            min-width: 150px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-line {
+            padding: 10px 0;
+            position: relative;
+        }
+
+        .file-line::after {
+            content: '';
+            display: block;
+            width: 50%;
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 10px auto;
+            /* 上下各留出10px的间距 */
+        }
+
+        #switchButton {
+            padding: 10px 20px;
+            background-color: var(--button-bg-color);
+            color: var(--button-text-color);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            margin: 10px 0;
+        }
+
+        #switchButton:hover {
+            background-color: var(--button-hover-bg-color);
+        }
+
+        #switchButton:active {
+            background-color: var(--button-active-bg-color);
+            color: var(--button-text-color);
+        }
+
+        .CodeMirror-placeholder {
+            color: var(--placeholder-color);
+        }
+
+        .content-preview {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: var(--spacing);
+            margin-bottom: var(--spacing);
+            height: 450px;
+            overflow-y: auto;
+        }
+
+        iframe {
+            width: 100%;
+            height: calc(100vh - 60px);
+            border: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .left-container,
+            .right-container {
+                width: 100%;
+                margin: 5px 0;
+            }
+
+            .main-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <!-- 左侧嵌入Kimi网站 -->
+        <div id="leftContainer" class="left-container">
+            <div id="websiteSwitcher">
+                <button id="poeButton">POE</button>
+                <button id="kimiButton">Kimi</button>
+            </div>
+            <iframe id="contentFrame" src="https://kimi.moonshot.cn" title="Kimi Website"></iframe>
+        </div>
+
+        <!-- 右侧编辑器和预览 -->
+        <div id="editorContainer" class="right-container">
+            <!-- 切换功能按钮 -->
+            <button id="switchButton">切换功能</button>
+
+            <!-- 工具栏 -->
+            <div id="toolbar">
+                <button id="previewButton">预览</button>
+                <button id="codeButton">代码</button>
+                <button id="copyButton">复制代码</button>
+            </div>
+
+            <!-- 代码编辑和预览 -->
+            <div id="codeEditorContainer">
+                <textarea id="editor">Write your HTML, CSS, and JS here...</textarea>
+            </div>
+
+            <!-- 提示词合成器 -->
+            <div class="container" id="promptGeneratorContainer" style="display: none;">
+                <div class="container" id="left-container">
+                    <input type="file" id="fileInput" class="file-input" accept=".md">
+                    <button class="button" id="openFile">打开本地文件</button>
+                    <input type="text" id="search" placeholder="搜索提示词..." class="input-box">
+                    <div class="content-preview" id="filePreview">
+                        <!-- 提示词内容预览区 -->
+                    </div>
+                </div>
+                <div class="container" id="right-container">
+                    <div class="input-box">
+                        <textarea id="template" placeholder="输入框架，使用大写字母作为占位符"></textarea>
+                    </div>
+                    <div class="placeholder-inputs" id="placeholderInputs">
+                        <!-- 动态生成的占位符输入框将在这里 -->
+                    </div>
+                    <button class="button" id="generate">生成</button>
+                    <div class="preview-box">
+                        <div id="previewText"></div>
+                    </div>
+                    <button class="button" id="copyPrompt">复制</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const editorElement = document.getElementById('editor');
+        const previewButton = document.getElementById('previewButton');
+        const codeButton = document.getElementById('codeButton');
+        const copyButton = document.getElementById('copyButton');
+        const codeEditorContainer = document.getElementById('codeEditorContainer');
+        const promptGeneratorContainer = document.getElementById('promptGeneratorContainer');
+        const switchButton = document.getElementById('switchButton');
+        const copyPromptButton = document.getElementById('copyPrompt');
+        const toolbar = document.getElementById('toolbar');
+        const poeButton = document.getElementById('poeButton');
+        const kimiButton = document.getElementById('kimiButton');
+        const iframe = document.getElementById('contentFrame');
+
+        // 初始化 CodeMirror 编辑器
+        const editor = CodeMirror.fromTextArea(editorElement, {
+            lineNumbers: true,
+            mode: 'htmlmixed',
+            theme: 'monokai',
+            placeholder: 'Write your HTML, CSS, and JS here...'
+        });
+
+        function updatePreview() {
+            const html = editor.getValue();
+            const preview = document.createElement('iframe');
+            preview.style.width = '100%';
+            preview.style.height = 'calc(100vh - 140px)';
+            preview.style.border = 'none';
+            preview.srcdoc = html;
+            codeEditorContainer.innerHTML = '';
+            codeEditorContainer.appendChild(preview);
+        }
+
+        previewButton.addEventListener('click', () => {
+            updatePreview();
+        });
+
+        codeButton.addEventListener('click', () => {
+            codeEditorContainer.innerHTML = '';
+            codeEditorContainer.appendChild(editor.getWrapperElement());
+        });
+
+        copyButton.addEventListener('click', () => {
+            const codeBlockText = editor.getValue();
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeBlockText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            try {
+                document.execCommand('copy');
+                alert('代码已复制到剪贴板');
+            } catch (err) {
+                console.error('无法复制文本: ', err);
+            }
+            document.body.removeChild(tempTextArea);
+        });
+
+        // 初始化预览
+        codeButton.click();
+
+        // 切换功能
+        let isCodeEditorVisible = true;
+        switchButton.addEventListener('click', () => {
+            isCodeEditorVisible = !isCodeEditorVisible;
+            codeEditorContainer.style.display = isCodeEditorVisible ? 'block' : 'none';
+            promptGeneratorContainer.style.display = isCodeEditorVisible ? 'none' : 'block';
+            toolbar.style.display = isCodeEditorVisible ? 'flex' : 'none';
+        });
+
+        const templateInput = document.getElementById('template');
+        const placeholderInputs = document.getElementById('placeholderInputs');
+        const generateBtn = document.getElementById('generate');
+        const previewText = document.getElementById('previewText');
+        const fileInput = document.getElementById('fileInput');
+        const openFileBtn = document.getElementById('openFile');
+        const searchInput = document.getElementById('search');
+        const filePreview = document.getElementById('filePreview');
+        const editorContainer = document.getElementById('editorContainer');
+
+        let fileContent = '';
+
+        templateInput.addEventListener('input', updatePlaceholderInputs);
+        generateBtn.addEventListener('click', generatePrompt);
+        copyPromptButton.addEventListener('click', copyToClipboard);
+        openFileBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        searchInput.addEventListener('input', searchContent);
+
+        poeButton.addEventListener('click', () => {
+            iframe.src = 'https://poe.com';
+        });
+
+        kimiButton.addEventListener('click', () => {
+            iframe.src = 'https://kimi.moonshot.cn';
+        });
+
+        function updatePlaceholderInputs() {
+            const placeholders = [...new Set(templateInput.value.match(/[A-Z]/g) || [])];
+            placeholderInputs.innerHTML = placeholders.map(placeholder => `
+                <div class="placeholder-input">
+                    <label for="input-${placeholder}">${placeholder}:</label>
+                    <textarea id="input-${placeholder}" placeholder="输入${placeholder}的内容"></textarea>
+                </div>
+            `).join('');
+        }
+
+        function generatePrompt() {
+            let prompt = templateInput.value;
+            const inputs = placeholderInputs.querySelectorAll('textarea');
+            inputs.forEach(input => {
+                const placeholder = input.id.split('-')[1];
+                prompt = prompt.replaceAll(placeholder, input.value || `[${placeholder}]`);
+            });
+            previewText.textContent = prompt;
+            showFeedback(generateBtn, '生成成功');
+        }
+
+        function copyToClipboard() {
+            const textArea = document.createElement('textarea');
+            textArea.value = previewText.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            showFeedback(copyPromptButton, '已复制到剪贴板');
+        }
+
+        function showFeedback(button, message) {
+            button.classList.add('feedback');
+            button.setAttribute('data-feedback', message);
+            setTimeout(() => {
+                button.classList.remove('feedback');
+            }, 2000);
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    fileContent = e.target.result;
+                    displayFileContent(fileContent);
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function displayFileContent(content) {
+            const lines = content.split('\n').filter(line => line.startsWith('- '));
+            filePreview.innerHTML = lines.map(line => `
+                <div class="file-line">${line.substring(2)}</div>
+            `).join('');
+            addFileLineClickEvent();
+        }
+
+        function searchContent() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const lines = filePreview.querySelectorAll('.file-line');
+            lines.forEach(line => {
+                if (line.textContent.toLowerCase().includes(searchTerm)) {
+                    line.style.display = 'block';
+                } else {
+                    line.style.display = 'none';
+                }
+            });
+        }
+
+        function addFileLineClickEvent() {
+            const lines = filePreview.querySelectorAll('.file-line');
+            lines.forEach(line => {
+                line.addEventListener('click', function() {
+                    lines.forEach(l => l.style.opacity = '0.5');
+                    this.style.opacity = '1';
+                    templateInput.value = this.textContent;
+                    updatePlaceholderInputs();
+                });
+            });
+        }
+
+       // 初始化占位符输入框
+       updatePlaceholderInputs();
+    </script>
+</body>
+
+</html>
